@@ -1,8 +1,4 @@
-Harika, Pulse projesinin "yüzü" olan iOS uygulaması için de, backend ile uyumlu, profesyonel bir `README.md` hazırladım.
 
-Bu dosya, uygulamanın amacını (Back-end'deki karmaşık yapay zeka kararlarını müşteriye nasıl "sihirli" bir şekilde sunduğunu) ve teknik kurulum detaylarını içeriyor.
-
----
 
 # 📱 Vodafone Pulse UI - iOS Demo App
 
@@ -14,9 +10,8 @@ Bu proje, bir CRM panelinden ziyade, son kullanıcının (Vodafone müşterisini
 
 Uygulama, standart bir telekom uygulamasından farklı olarak **"Pulse Magic Flow"** adı verilen özel bir akışa sahiptir:
 
-1. **Smart Dashboard:** Müşteriyi ismiyle karşılayan, dinamik hikayeler (Stories) ve kişiselleştirilmiş kısayollar sunan ana ekran.
-2. **Tobi & Pulse Entegrasyonu:** Alt bardaki Tobi ikonuna tıklandığında Pulse motoru tetiklenir.
-3. **3 Aşamalı AI Görselleştirme (Magic Flow):**
+1. **Smart Dashboard:** Müşteriyi ismiyle karşılayan, dinamik hikayeler (Stories) ve kişiselleştirilmiş kısayollar sunan ana Yanımda ekranı.
+2. **3 Aşamalı AI Görselleştirme (Magic Flow):**
 * **Wake (Uyanış):** AI'ın dış dünyadaki sinyalleri (hava durumu, haberler) taradığını gösterir.
 * **Match (Eşleşme):** Müşterinin alışkanlıkları ile dış sinyallerin eşleştiği anı görselleştirir (Örn: "🏟️ Derbi Günü" + "📱 Sosyal Medya Tutkunu").
 * **Reveal (Teklif):** Müşteriye özel üretilen, samimi satış metnini ve ürünü sunar.
