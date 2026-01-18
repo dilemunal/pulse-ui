@@ -1,4 +1,3 @@
-
 import SwiftUI
 import Combine
 import UIKit
@@ -9,21 +8,64 @@ let VODAFONE_RED = Color(red: 230/255, green: 0, blue: 0)
 
 // --- 2. MODELS ---
 struct PulseData: Codable {
+    let customer_id: Int?
     let name: String?
     let persona_label: String?
+    let current_intent: String?
+    let suggested_product: String?
     let marketing_headline: String?
     let marketing_content: String?
-    let suggested_product: String?
+    let ai_reasoning: AIReasoning?
+    let created_at: String?
 
     static let dummy = PulseData(
+        customer_id: 1,
         name: "Merve Kaya",
-        persona_label: "Trabzonlu Dijital Gezgin",
-        marketing_headline: "Yağmur Modu Açıldı: Evde Keyif + Ekstra GB",
-        marketing_content: "İstanbul’da yağışlı ve soğuk bir gün… PULSE senin için tam şu an bir fırsat yakaladı. Tek dokunuşla incele.",
-        suggested_product: "Günlük Video Pass"
+        persona_label: "[Veri Tutkunu ve Seyahat Meraklısı] Yüksek ARPU ve veri kullanımı, düşük sözleşme süresi risk oluşturur.",
+        current_intent: "General Browsing",
+        suggested_product: "Sınırsız Video Pass",
+        marketing_headline: "Yağışlı günlerde dizi keyfi, Merve!",
+        marketing_content: "Merhaba Merve, İstanbul’da yağışlı ve soğuk bir gün geçirirken, Sınırsız Video Pass ile Netflix, Amazon Prime ve daha fazlasında sınırsız video keyfini sürdürebilirsin.",
+        ai_reasoning: AIReasoning(
+            customer_facts_used: [
+                "Yağışlı soğuk hava ve evde kalma eğilimi",
+                "YouTube Premium üyeliği",
+                "Kalan veri miktarı düşük"
+            ],
+            product_facts_used: [
+                "Sınırsız Video Pass: YouTube, Netflix, Amazon Prime gibi uygulamalarda sınırsız izleme",
+                "Aylık geçerlilik"
+            ],
+            why_this_product_now: [
+                "Yağışlı havada evde kalma ihtimali yüksek, video izleme isteği artar",
+                "Kalan veri düşük, sınırsız paket rahatlatır"
+            ],
+            strategist_reasoning: "Müşteri video tüketiyor; yağışlı hava ev içi eğlenceyi artırır. Video Pass, veri endişesini ortadan kaldırır.",
+            grounding: Grounding(
+                selected_news: "İstanbul hava durumu: Yağışlı/Soğuk",
+                search_query: "sınırsız video pass",
+                chosen_product_code: "ADD-0034"
+            )
+        ),
+        created_at: "2026-01-17T22:23:41.802640"
     )
 }
 
+struct AIReasoning: Codable {
+    let customer_facts_used: [String]?
+    let product_facts_used: [String]?
+    let why_this_product_now: [String]?
+    let strategist_reasoning: String?
+    let grounding: Grounding?
+}
+
+struct Grounding: Codable {
+    let selected_news: String?
+    let search_query: String?
+    let chosen_product_code: String?
+}
+
+// --- 3. VIEWMODEL ---
 final class PulseViewModel: ObservableObject {
     @Published var data: PulseData = PulseData.dummy
     @Published var isLoading = false
@@ -31,6 +73,7 @@ final class PulseViewModel: ObservableObject {
     func fetchData() {
         guard let url = URL(string: API_URL) else { return }
         DispatchQueue.main.async { self.isLoading = true }
+
         URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
             DispatchQueue.main.async {
                 self?.isLoading = false
@@ -45,7 +88,7 @@ final class PulseViewModel: ObservableObject {
     }
 }
 
-// --- 3. BACKGROUND ---
+// --- 4. BACKGROUND ---
 struct CleanTechBackground: View {
     @State private var drift: CGFloat = 0
 
@@ -77,7 +120,7 @@ struct CleanTechBackground: View {
     }
 }
 
-// --- 4. EFFECTS ---
+// --- 5. EFFECTS ---
 struct Shimmer: ViewModifier {
     @State private var phase: CGFloat = -0.85
     func body(content: Content) -> some View {
@@ -122,7 +165,6 @@ struct PulseRing: View {
     }
 }
 
-/// More futuristic sparkles (tiny + soft) – looks less “emoji”
 struct FuturisticSparkles: View {
     @State private var animate = false
 
@@ -155,7 +197,6 @@ struct FuturisticSparkles: View {
 }
 
 struct GlowBorder: ViewModifier {
-    @State private var t: CGFloat = 0
     func body(content: Content) -> some View {
         content
             .overlay(
@@ -179,7 +220,6 @@ struct GlowBorder: ViewModifier {
 }
 extension View { func glowBorder() -> some View { modifier(GlowBorder()) } }
 
-/// Reusable “AI Orb” (instead of emojis)
 struct AIOrb: View {
     var symbol: String
     @State private var rotate = false
@@ -187,7 +227,6 @@ struct AIOrb: View {
 
     var body: some View {
         ZStack {
-            // rotating halo
             Circle()
                 .stroke(
                     LinearGradient(colors: [VODAFONE_RED.opacity(0.0), VODAFONE_RED.opacity(0.35), VODAFONE_RED.opacity(0.0)],
@@ -201,7 +240,6 @@ struct AIOrb: View {
                     withAnimation(.linear(duration: 2.4).repeatForever(autoreverses: false)) { rotate = true }
                 }
 
-            // inner glow
             Circle()
                 .fill(
                     RadialGradient(colors: [VODAFONE_RED.opacity(0.35), .clear],
@@ -215,7 +253,6 @@ struct AIOrb: View {
                     withAnimation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true)) { pulse = true }
                 }
 
-            // core
             Circle()
                 .fill(LinearGradient(colors: [VODAFONE_RED, Color(hex: "b30000")],
                                      startPoint: .topLeading,
@@ -231,8 +268,7 @@ struct AIOrb: View {
         .accessibilityHidden(true)
     }
 }
-
-// --- 5. AI PROCESSING VIEW (FUTURISTIC, NO EMOJIS) ---
+// --- 6. AI PROCESSING VIEW ---
 struct AIProcessingView: View {
     let name: String
     @Binding var isCompleted: Bool
@@ -296,7 +332,6 @@ struct AIProcessingView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 18)
 
-                        // Progress
                         VStack(spacing: 10) {
                             ZStack(alignment: .leading) {
                                 Capsule().fill(Color.gray.opacity(0.12)).frame(width: 260, height: 10)
@@ -354,7 +389,7 @@ struct AIProcessingView: View {
     }
 }
 
-// --- 6. REVEAL VIEW (FULL TEXT INSTANT + MORE SPARKLY/FUTURISTIC) ---
+// --- 7. REVEAL VIEW ---
 struct RevealView: View {
     @ObservedObject var viewModel: PulseViewModel
     @Binding var showReveal: Bool
@@ -371,14 +406,10 @@ struct RevealView: View {
         ZStack {
             CleanTechBackground()
 
-            // More “sihirli” sparkles near top
             FuturisticSparkles()
-                .mask(
-                    LinearGradient(colors: [.black, .black, .clear], startPoint: .top, endPoint: .bottom)
-                )
+                .mask(LinearGradient(colors: [.black, .black, .clear], startPoint: .top, endPoint: .bottom))
                 .opacity(0.85)
 
-            // Subtle floating glow
             RadialGradient(colors: [VODAFONE_RED.opacity(0.18), .clear],
                            center: .top,
                            startRadius: 10,
@@ -387,9 +418,7 @@ struct RevealView: View {
             .opacity(floaty ? 1 : 0.85)
             .offset(y: floaty ? -10 : 10)
             .onAppear {
-                withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) {
-                    floaty = true
-                }
+                withAnimation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true)) { floaty = true }
             }
 
             VStack {
@@ -414,7 +443,6 @@ struct RevealView: View {
 
                 Spacer(minLength: 12)
 
-                // Orb header
                 ZStack {
                     AIOrb(symbol: "sparkles")
                     PulseRing().frame(width: 190, height: 190).opacity(0.75)
@@ -437,7 +465,6 @@ struct RevealView: View {
                         .padding(.horizontal, 24)
                         .padding(.top, 8)
 
-                    // FULL TEXT INSTANT (no typewriter)
                     Text(viewModel.data.marketing_content ?? "PULSE senin için bir fırsat yakaladı. Tek dokunuşla incele.")
                         .font(.body)
                         .multilineTextAlignment(.center)
@@ -464,10 +491,7 @@ struct RevealView: View {
                             .fontWeight(.bold)
                             .foregroundColor(.black)
 
-                        Button(action: {
-                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                            // TODO: activation
-                        }) {
+                        Button(action: { UIImpactFeedbackGenerator(style: .medium).impactOccurred() }) {
                             HStack(spacing: 10) {
                                 Text("Teklifi İncele")
                                 Image(systemName: "arrow.right")
@@ -495,17 +519,300 @@ struct RevealView: View {
                 .glowBorder()
                 .shadow(color: .black.opacity(0.06), radius: 24, y: 12)
                 .padding(.horizontal, 20)
-                .padding(.bottom, 40)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .padding(.bottom, 120)
             }
         }
     }
 }
 
-// --- 7. HOME VIEW (BANNER SMALLER + SINGLE CTA TEXT + "Yapay zekamız PULSE" copy) ---
+// --- 8. STORIES ---
+struct StoryItem: Identifiable {
+    let id = UUID()
+    let title: String
+    let subtitle: String?
+    let icon: String
+    let gradient: [Color]
+    let badgeText: String?
+    let showStar: Bool
+}
+
+struct StoryBubble: View {
+    let item: StoryItem
+
+    var body: some View {
+        VStack(spacing: 8) {
+            ZStack {
+                Circle().stroke(VODAFONE_RED, lineWidth: 3).frame(width: 66, height: 66)
+
+                Circle()
+                    .fill(LinearGradient(colors: item.gradient, startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .frame(width: 58, height: 58)
+                    .overlay(Circle().stroke(Color.white.opacity(0.75), lineWidth: 1))
+                    .shadow(color: .black.opacity(0.10), radius: 6, y: 3)
+
+                Image(systemName: item.icon)
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(.white)
+                    .shadow(color: .black.opacity(0.18), radius: 2)
+
+                if let badge = item.badgeText {
+                    Text(badge)
+                        .font(.system(size: 9, weight: .heavy))
+                        .foregroundColor(.white)
+                        .padding(.vertical, 3)
+                        .padding(.horizontal, 6)
+                        .background(VODAFONE_RED)
+                        .clipShape(Capsule())
+                        .overlay(Capsule().stroke(Color.white.opacity(0.6), lineWidth: 1))
+                        .offset(x: 20, y: -22)
+                }
+
+                if item.showStar {
+                    Image(systemName: "star.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(.yellow)
+                        .background(Color.white.clipShape(Circle()))
+                        .offset(x: 18, y: 22)
+                        .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
+                }
+            }
+
+            VStack(spacing: 2) {
+                Text(item.title)
+                    .font(.system(size: 11.5, weight: .semibold))
+                    .foregroundColor(Color(hex: "333333"))
+                    .lineLimit(1)
+
+                if let sub = item.subtitle {
+                    Text(sub)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.gray)
+                        .lineLimit(1)
+                }
+            }
+        }
+        .frame(width: 82)
+    }
+}
+
+// --- 9. SHORTCUT GRID ---
+struct ShortcutItem: Identifiable {
+    let id = UUID()
+    let title: String
+    let icon: String
+}
+
+struct ShortcutGrid: View {
+    private let columns: [GridItem] = Array(repeating: GridItem(.flexible(), spacing: 12), count: 4)
+
+    private let items: [ShortcutItem] = [
+        .init(title: "Ayrıcalıklı\nAlışveriş", icon: "bag.fill"),
+        .init(title: "Vodafone\nPay", icon: "creditcard.fill"),
+        .init(title: "Happy", icon: "face.smiling.fill"),
+        .init(title: "Flex Cihaz\nDünyası", icon: "headphones"),
+        .init(title: "Hazır\nmısınız?", icon: "bolt.fill"),
+        .init(title: "Ev İnterneti\nBaşvuru", icon: "house.fill"),
+        .init(title: "Bana Ne Var", icon: "shippingbox.fill"),
+        .init(title: "Tüm\nKategoriler", icon: "ellipsis")
+    ]
+
+    var body: some View {
+        LazyVGrid(columns: columns, spacing: 12) {
+            ForEach(items) { item in
+                Button(action: { UIImpactFeedbackGenerator(style: .light).impactOccurred() }) {
+                    VStack(spacing: 10) {
+                        Image(systemName: item.icon)
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundColor(VODAFONE_RED)
+                            .frame(height: 26)
+
+                        Text(item.title)
+                            .font(.system(size: 11.5, weight: .semibold))
+                            .foregroundColor(Color(hex: "333333"))
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.85)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 92)
+                    .background(Color.white)
+                    .cornerRadius(16)
+                    .shadow(color: .black.opacity(0.05), radius: 6, y: 4)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 20)
+    }
+}
+
+// --- 10. INTERNET BANNER ---
+struct DomesticInternetBanner: View {
+    let remainingGB: Double
+    let totalGB: Double
+    let subtitle: String
+
+    private var progress: CGFloat {
+        guard totalGB > 0 else { return 0 }
+        return CGFloat(min(max(remainingGB / totalGB, 0), 1))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                HStack(spacing: 10) {
+                    Image(systemName: "arrow.up.arrow.down.circle.fill")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(Color(hex: "444444"))
+                    Text("Yurt İçi İnternet")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(Color(hex: "333333"))
+                }
+
+                Spacer()
+
+                Text("\(Int(totalGB))GB")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.gray)
+            }
+
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(String(format: "%.2f", remainingGB).replacingOccurrences(of: ".", with: ","))
+                    .font(.system(size: 34, weight: .heavy, design: .rounded))
+                    .foregroundColor(Color(hex: "111111"))
+                Text("GB kaldı")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.gray)
+                Spacer()
+            }
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.gray.opacity(0.14)).frame(height: 8)
+                    Capsule().fill(VODAFONE_RED).frame(width: max(8, geo.size.width * progress), height: 8)
+                }
+            }
+            .frame(height: 8)
+
+            HStack(spacing: 10) {
+                Text(subtitle)
+                    .font(.system(size: 12.5, weight: .semibold))
+                    .foregroundColor(Color(hex: "333333"))
+                    .lineLimit(2)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 12)
+
+                Spacer()
+
+                Image(systemName: "xmark")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.gray)
+                    .padding(10)
+            }
+            .background(Color.white)
+            .cornerRadius(14)
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(VODAFONE_RED.opacity(0.18), lineWidth: 1))
+        }
+        .padding(18)
+        .background(Color.white)
+        .cornerRadius(22)
+        .shadow(color: .black.opacity(0.06), radius: 10, y: 6)
+        .padding(.horizontal, 20)
+    }
+}
+
+// --- 11. BOTTOM NAV ---
+enum BottomTab: String, CaseIterable {
+    case home = "Ana Sayfa"
+    case discover = "Keşfet"
+    case pulse = "Tobi"
+    case account = "Hesabım"
+
+    var icon: String {
+        switch self {
+        case .home: return "house.fill"
+        case .discover: return "square.grid.2x2.fill"
+        case .pulse: return "face.smiling.fill"
+        case .account: return "person.fill"
+        }
+    }
+}
+
+struct BottomNavBar: View {
+    @Binding var selected: BottomTab
+    @Binding var showProcessing: Bool
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Divider().opacity(0.15)
+
+            HStack {
+                tabButton(.home)
+                tabButton(.discover)
+
+                // Center Tobi (fixed, not floating)
+                Button(action: {
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    selected = .pulse
+                    withAnimation(.spring(response: 0.5, dampingFraction: 0.75)) {
+                        showProcessing = true
+                    }
+                }) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: 54, height: 54)
+                            .shadow(color: .black.opacity(0.12), radius: 10, y: 6)
+
+                        ZStack {
+                            Circle()
+                                .fill(VODAFONE_RED.opacity(0.10))
+                                .frame(width: 46, height: 46)
+
+                            Image(systemName: "face.smiling.fill")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(VODAFONE_RED)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity)
+
+                tabButton(.account)
+                tabButton(.discover)
+            }
+            .padding(.horizontal, 10)
+            .padding(.top, 10)
+            .padding(.bottom, 16)
+            .background(Color.white.opacity(0.98))
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func tabButton(_ tab: BottomTab) -> some View {
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            selected = tab
+        }) {
+            VStack(spacing: 5) {
+                Image(systemName: tab.icon)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(selected == tab ? VODAFONE_RED : .gray)
+
+                Text(tab.rawValue)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(selected == tab ? VODAFONE_RED : .gray)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
+    }
+}
+// --- 12. HOME VIEW ---
 struct HomeView: View {
     @ObservedObject var viewModel: PulseViewModel
     @Binding var showProcessing: Bool
+    @State private var selectedTab: BottomTab = .home
 
     var firstName: String {
         if let fullName = viewModel.data.name {
@@ -515,7 +822,7 @@ struct HomeView: View {
     }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             Color(UIColor.systemGroupedBackground).ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -543,22 +850,43 @@ struct HomeView: View {
 
                 ScrollView {
                     VStack(spacing: 18) {
-                        // Story circles
+
+                        // Story bubbles
+                        let stories: [StoryItem] = [
+                            .init(title: "Pulse", subtitle: "Bugün", icon: "sparkles",
+                                  gradient: [VODAFONE_RED, Color(hex: "b30000")],
+                                  badgeText: "AI", showStar: true),
+                            .init(title: "Günün", subtitle: "Fırsatı", icon: "gift.fill",
+                                  gradient: [Color(hex: "ff4d4d"), VODAFONE_RED],
+                                  badgeText: "NEW", showStar: false),
+                            .init(title: "10 GB", subtitle: "Hediye", icon: "antenna.radiowaves.left.and.right",
+                                  gradient: [Color(hex: "6a00ff"), Color(hex: "b517ff")],
+                                  badgeText: "10GB", showStar: true),
+                            .init(title: "Flex", subtitle: "Cihaz", icon: "headphones",
+                                  gradient: [Color(hex: "ff7a00"), Color(hex: "ff3d00")],
+                                  badgeText: nil, showStar: true),
+                            .init(title: "Happy", subtitle: "Kazan", icon: "face.smiling.fill",
+                                  gradient: [Color(hex: "00c2ff"), Color(hex: "007aff")],
+                                  badgeText: nil, showStar: false),
+                            .init(title: "Oyun", subtitle: "Eğlence", icon: "gamecontroller.fill",
+                                  gradient: [Color(hex: "111111"), Color(hex: "5a2cff")],
+                                  badgeText: nil, showStar: false)
+                        ]
+
                         ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 15) {
-                                ForEach(0..<5, id: \.self) { _ in
-                                    Circle()
-                                        .fill(Color.white)
-                                        .frame(width: 62, height: 62)
-                                        .overlay(Circle().stroke(VODAFONE_RED, lineWidth: 2.5))
-                                        .shadow(radius: 1)
+                            HStack(spacing: 14) {
+                                ForEach(stories) { item in
+                                    Button(action: { UIImpactFeedbackGenerator(style: .light).impactOccurred() }) {
+                                        StoryBubble(item: item)
+                                    }
+                                    .buttonStyle(.plain)
                                 }
                             }
                             .padding(.horizontal, 20)
                         }
                         .padding(.top, 14)
 
-                        // Smaller banner
+                        // PULSE RED BANNER (API-driven text, rozet+CTA fixed)
                         Button(action: {
                             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                             withAnimation(.spring(response: 0.5, dampingFraction: 0.72)) {
@@ -570,7 +898,6 @@ struct HomeView: View {
                                                startPoint: .topLeading,
                                                endPoint: .bottomTrailing)
 
-                                // smaller rings
                                 PulseRing()
                                     .frame(width: 180, height: 180)
                                     .offset(x: 210, y: -55)
@@ -579,15 +906,15 @@ struct HomeView: View {
 
                                 VStack(alignment: .leading, spacing: 10) {
 
-                                    // Badge (now explicitly "Yapay zekamız PULSE")
+                                    // Rozet (fixed)
                                     HStack(spacing: 8) {
-                                        Image(systemName: "sparkles")
-                                            .font(.system(size: 11, weight: .bold))
-                                            .foregroundColor(.white.opacity(0.95))
+                                        Text("✨")
+                                            .font(.system(size: 12, weight: .bold))
+                                            .foregroundColor(.white)
 
-                                        Text("YAPAY ZEKÂMIZ PULSE • SANA ÖZEL")
-                                            .font(.system(size: 10.5, weight: .bold))
-                                            .tracking(1.0)
+                                        Text("PULSE AI ÖNERİSİ")
+                                            .font(.system(size: 10.8, weight: .bold))
+                                            .tracking(1.1)
                                             .foregroundColor(.white)
                                     }
                                     .padding(.vertical, 6)
@@ -596,20 +923,27 @@ struct HomeView: View {
                                     .cornerRadius(18)
                                     .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.white.opacity(0.18), lineWidth: 1))
 
-                                    // Headline (smaller)
-                                    Text(viewModel.data.marketing_headline ?? "PULSE senin için bir fırsat yakaladı")
+                                    // Headline (API)
+                                    Text(viewModel.data.marketing_headline ?? "Bu akşam için yakalanan sana özel fırsat")
                                         .font(.system(size: 18, weight: .heavy, design: .rounded))
                                         .foregroundColor(.white)
                                         .multilineTextAlignment(.leading)
                                         .lineLimit(2)
                                         .shadow(color: .black.opacity(0.22), radius: 2)
 
-                                    // Single CTA text (no “Hem kilidi aç hem teklifi gör”)
+                                    // Reason line (API from customer_facts_used -> 3 items -> emojis)
+                                    Text(reasonLine(from: viewModel.data.ai_reasoning?.customer_facts_used))
+                                        .font(.system(size: 12.5, weight: .semibold, design: .rounded))
+                                        .foregroundColor(.white.opacity(0.88))
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.80)
+
+                                    // CTA (fixed)
                                     HStack {
                                         Spacer()
                                         HStack(spacing: 8) {
-                                            Text("TEKLİFİ İNCELE")
-                                                .font(.system(size: 12.5, weight: .bold))
+                                            Text("Pulse ne öneriyor?")
+                                                .font(.system(size: 12.8, weight: .bold))
                                             Image(systemName: "arrow.right")
                                                 .font(.system(size: 12, weight: .bold))
                                         }
@@ -624,37 +958,65 @@ struct HomeView: View {
                                 }
                                 .padding(18)
                             }
-                            .frame(minHeight: 150) // smaller banner height
+                            .frame(minHeight: 150)
                             .cornerRadius(22)
                             .shadow(color: VODAFONE_RED.opacity(0.36), radius: 10, y: 6)
                             .padding(.horizontal, 20)
                         }
 
-                        // Placeholder grid
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 15) {
-                            ForEach(0..<4, id: \.self) { _ in
-                                Rectangle()
-                                    .fill(Color.white)
-                                    .frame(height: 96)
-                                    .cornerRadius(16)
-                                    .shadow(color: .black.opacity(0.03), radius: 4, y: 2)
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        .opacity(0.7)
+                        // Grid
+                        ShortcutGrid()
+
+                        // Internet banner
+                        DomesticInternetBanner(
+                            remainingGB: 34.20,
+                            totalGB: 40,
+                            subtitle: "Happy’de yeni yıla özel Anında Kazan devam ediyor. Hala sürpriz hediyeni almadıysan hemen tıklayın!"
+                        )
+                        .padding(.top, 6)
                     }
-                    .padding(.bottom, 40)
+                    .padding(.bottom, 110)
                 }
             }
+
+            BottomNavBar(selected: $selectedTab, showProcessing: $showProcessing)
+                .ignoresSafeArea(edges: .bottom)
         }
+    }
+
+    // --- Banner reason helpers ---
+    private func reasonLine(from facts: [String]?) -> String {
+        guard let facts, !facts.isEmpty else {
+            return "🎬 Video + sosyal • 🌧️ yağışlı hava • 🗓️ hafta sonu"
+        }
+
+        let picked = Array(facts.prefix(3)).map { cleanFact($0) }
+        let withEmoji: [String] = picked.enumerated().map { idx, text in
+            switch idx {
+            case 0: return "🎬 \(text)"
+            case 1: return "🌧️ \(text)"
+            default: return "🗓️ \(text)"
+            }
+        }
+        return withEmoji.joined(separator: " • ")
+    }
+
+    private func cleanFact(_ s: String) -> String {
+        var t = s
+            .replacingOccurrences(of: "Merve’nin ", with: "")
+            .replacingOccurrences(of: "Merve'nin ", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if t.count > 34 { t = String(t.prefix(34)) + "…" }
+        return t
     }
 }
 
-// --- 8. MAIN CONTENT ---
+// --- 13. MAIN CONTENT ---
 struct ContentView: View {
     @StateObject var viewModel = PulseViewModel()
     @State private var showProcessing = false
-    @State private var showReveal = false
+    @State private var showReveal = false 
 
     var body: some View {
         ZStack {
@@ -682,7 +1044,7 @@ struct ContentView: View {
     }
 }
 
-// --- 9. HEX HELPER ---
+// --- 14. HEX HELPER ---
 extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
@@ -702,5 +1064,4 @@ extension Color {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View { ContentView() }
 }
-
 
